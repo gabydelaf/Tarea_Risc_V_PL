@@ -26,8 +26,8 @@ always@(negedge reset or negedge clk) begin
 	if(reset==0)
 		begin
 		pc_o <= 0;
-		inst_bus_o<=0;
-		pc4_o<=0;
+		inst_bus_o <= 0;
+		pc4_o <= 0;
 		end
 	else	
 		if(enable==1)

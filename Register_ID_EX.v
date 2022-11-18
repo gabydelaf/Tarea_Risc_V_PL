@@ -24,7 +24,11 @@ module Register_ID_EX
 	input  [N-1:0] pc4,
 	input src,
 	input b_o_jalr,
+	input Reg_Write_i,
+	input	 [4:0] write_register_i,
 	
+	output reg [4:0] write_register_o,
+	output reg Reg_Write_o,
 	output reg b_o_jalr_o,
 	output reg src_o,
 	output reg [N-1:0] pc4_o,
@@ -53,6 +57,8 @@ always@(negedge reset or negedge clk) begin
 		pc4_o<=0;
 		src_o<=0;
 		b_o_jalr_o<=0;
+		Reg_Write_o <= 0;
+		write_register_o<=0;
 		end
 	else	
 		if(enable==1)
@@ -68,6 +74,8 @@ always@(negedge reset or negedge clk) begin
 			pc4_o<=pc4;
 			src_o<=src;
 			b_o_jalr_o<=b_o_jalr;
+			Reg_Write_o<=Reg_Write_i;
+			write_register_o<=write_register_i;
 			end
 end
 

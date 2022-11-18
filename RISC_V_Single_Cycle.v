@@ -102,37 +102,45 @@ assign result = res_write_w;
 //******************************************************************/
 //PIPELINE//
 
+//PC
 
 //wires reg IF/ID
-wire [31:0] instruction_bus_PL_w;
-wire [31:0] pc_PL_w;
-wire [31:0] pc_plus_4_PL_w;
-wire [31:0] pc_plus_4_PL2_w;
-wire [31:0] pc_plus_4_PL3_w;
-wire [31:0] pc_plus_4_PL4_w;
+wire [31:0] instruction_bus_IF_ID_w;
+wire [31:0] pc_IF_ID_w;
+wire [31:0] pc_plus_4_IF_ID_w;
+wire [31:0] pc_plus_4_ID_EX_w;
+wire [31:0] pc_plus_4_EX_MEM_w;
+wire [31:0] pc_plus_4_MEM_WB_w;
 //wires reg ID/EX
-wire [31:0] read_data_1_PL_w;
-wire [31:0] read_data_2_PL_w;
-wire [31:0] inmmediate_data_PL_w;
-wire [31:0] pc_PL2_w;
-wire branch_PL_w;
-wire mem_read_PL_w;
-wire mem_write_PL_w;
-wire [3:0] alu_operation_PL_w;
-wire alu_src_PL_w;
-wire b_e_pl_w;
-wire b_jalr_w;
+wire [31:0] read_data_1_ID_EX_w;
+wire [31:0] read_data_2_ID_EX_w;
+wire [31:0] inmmediate_data_ID_EX_w;
+wire [31:0] pc_ID_EX_w;
+wire branch_ID_EX_w;
+wire mem_read_ID_EX_w;
+wire mem_write_ID_EX_w;
+wire [3:0] alu_operation_ID_EX_w;
+wire alu_src_ID_EX_w;
+wire b_e_ID_EX_w;
+wire b_jalr_ID_EX_w;
+
 //wires reg EX/MEM
-wire mem_read_PL2_w;
-wire mem_write_PL2_w;
+wire mem_read_EX_MEM_w;
+wire mem_write_EX_MEM_w;
 wire zero_w;
-wire [31:0] alu_result_PL_w;
-wire branch_E_PL_w;
-wire [31:0]read_data_2PLO_w;
+wire [31:0] alu_result_EX_MEM_w;
+wire branch_E_EX_MEM_w;
+wire [31:0]read_data_2_EX_MEM_w;
+wire reg_write_EX_MEM_w;
+wire [4:0]write_register_EX_MEM_w;
 
 //wires MEM/WB
-wire branch_E_PL2_w;
-wire [31:0]mem_out_or_result_PL_w;
+wire branch_E_MEM_WB_w;
+wire [31:0]mem_out_or_result_MEM_WB_w;
+wire reg_write_MEM_WB_w;
+wire reg_write_WB_RF_w;
+wire [4:0]write_register_MEM_WB_w;
+wire [4:0]write_register_WB_RF_w;
 //******************************************************************/
 //******************************************************************/
 //******************************************************************/
@@ -151,12 +159,12 @@ CONTROL_UNIT
 	.OP_i(instruction_bus_w[6:0]),
 	/** outputus**/
 	.ALU_Op_o(alu_op_w),
-	.ALU_Src_o(alu_src_PL_w),
+	.ALU_Src_o(alu_src_ID_EX_w),
 	.Reg_Write_o(reg_write_w),
 	.Mem_to_Reg_o(mem_to_reg_w),
-	.Mem_Read_o(mem_read_PL_w),
-	.Mem_Write_o(mem_write_PL_w),
-	.Branch_o(branch_PL_w)//se conecta el bit de branch al cable
+	.Mem_Read_o(mem_read_ID_EX_w),
+	.Mem_Write_o(mem_write_ID_EX_w),
+	.Branch_o(branch_ID_EX_w)//se conecta el bit de branch al cable
 );
 
 PC_Register
@@ -177,7 +185,7 @@ Program_Memory
 PROGRAM_MEMORY
 (
 	.Address_i(pc_w),
-	.Instruction_o(instruction_bus_PL_w)
+	.Instruction_o(instruction_bus_IF_ID_w)
 );
 
 
@@ -187,7 +195,7 @@ PC_PLUS_4
 	.Data0(pc_w),
 	.Data1(4),
 	
-	.Result(pc_plus_4_PL_w)
+	.Result(pc_plus_4_IF_ID_w)
 );
 
 
@@ -204,13 +212,13 @@ REGISTER_FILE_UNIT
 (
 	.clk(clk),
 	.reset(reset),
-	.Reg_Write_i(reg_write_w),
-	.Write_Register_i(instruction_bus_w[11:7]),
+	.Reg_Write_i(reg_write_WB_RF_w),
+	.Write_Register_i(write_register_WB_RF_w),
 	.Read_Register_1_i(instruction_bus_w[19:15]),
 	.Read_Register_2_i(instruction_bus_w[24:20]),
 	.Write_Data_i(res_write_w),//se modifica para que lea del multiplexor
-	.Read_Data_1_o(read_data_1_PL_w),
-	.Read_Data_2_o(read_data_2_PL_w)
+	.Read_Data_1_o(read_data_1_ID_EX_w),
+	.Read_Data_2_o(read_data_2_ID_EX_w)
 
 );
 
@@ -219,7 +227,7 @@ Immediate_Unit
 IMM_UNIT
 (  .op_i(instruction_bus_w[6:0]),
    .Instruction_bus_i(instruction_bus_w),
-   .Immediate_o(inmmediate_data_PL_w)
+   .Immediate_o(inmmediate_data_ID_EX_w)
 );
 
 
@@ -245,7 +253,7 @@ ALU_CONTROL_UNIT
 	.funct7_i(instruction_bus_w[30]),
 	.ALU_Op_i(alu_op_w),
 	.funct3_i(instruction_bus_w[14:12]),
-	.ALU_Operation_o(alu_operation_PL_w)
+	.ALU_Operation_o(alu_operation_ID_EX_w)
 
 );
 
@@ -258,7 +266,7 @@ ALU_UNIT
 	.A_i(mux_pc_a_w),
 	.B_i(read_data_2_or_imm_w),
 	.Zero_o(zero_w),
-	.ALU_Result_o(alu_result_PL_w)
+	.ALU_Result_o(alu_result_EX_MEM_w)
 );
 //Se instancia Data Memory
 Data_Memory
@@ -270,7 +278,7 @@ DATA_MEMORY_UNIT
 	.clk(clk),
 	.Mem_Write_i(mem_write_w),
 	.Mem_Read_i(mem_read_w),
-	.Write_Data_i(read_data_2PLO_w),
+	.Write_Data_i(read_data_2_EX_MEM_w),
 	.Address_i(alu_result_w),
 	.Read_Data_o(memory_out_w)
 
@@ -287,7 +295,7 @@ MUX_RESULT_OR_MEM
 	.Mux_Data_0_i(alu_result_w),
 	.Mux_Data_1_i(memory_out_w),
 	
-	.Mux_Output_o(mem_out_or_result_PL_w)
+	.Mux_Output_o(mem_out_or_result_MEM_WB_w)
 
 );
 
@@ -300,7 +308,7 @@ Multiplexer_2_to_1
 MUX_PC
 (
 	.Selector_i(branch_E_w),
-	.Mux_Data_0_i(pc_plus_4_w),
+	.Mux_Data_0_i(pc_plus_4_IF_ID_w), //cambiar origen
 	.Mux_Data_1_i(alu_result_w),
 	
 	.Mux_Output_o(pc_w_2)
@@ -316,7 +324,7 @@ MUX_A_OR_PC
 (
 	.Selector_i(b_o_j_w),
 	.Mux_Data_0_i(read_data_1_w),
-	.Mux_Data_1_i(pc_PL2_w),
+	.Mux_Data_1_i(pc_ID_EX_w),
 	
 	.Mux_Output_o(mux_pc_a_w)
 
@@ -327,14 +335,14 @@ MUX_A_OR_PC
 Branch_Control
 BRANCH_CONTROL
 (
-	.Branch_Enable_i(branch_PL_w),
+	.Branch_Enable_i(branch_ID_EX_w),
 	.OP_i(instruction_bus_w[6:0]),
 	.funct3_i(instruction_bus_w[14:12]),
-	.A_i(read_data_1_PL_w),
-	.B_i(read_data_2_PL_w),
+	.A_i(read_data_1_ID_EX_w),
+	.B_i(read_data_2_ID_EX_w),
 	
-	.Branch_Enable_o(b_e_pl_w),
-	.branch_or_jalr_o(b_jalr_w)
+	.Branch_Enable_o(b_e_ID_EX_w),
+	.branch_or_jalr_o(b_jalr_ID_EX_w)
 );
 
 //Multiplexor para escribir el pc en el registro destino
@@ -364,11 +372,11 @@ REG_FETCH_DECODE
 	.reset(reset),
 	.enable(1'b1),
 	.pc(pc_w),	
-	.inst_bus(instruction_bus_PL_w),	
-	.pc4(pc_plus_4_PL_w),
+	.inst_bus(instruction_bus_IF_ID_w),	
+	.pc4(pc_plus_4_IF_ID_w),
 	
-	.pc4_o(pc_plus_4_PL2_w),
-	.pc_o	(pc_PL_w),
+	.pc4_o(pc_plus_4_ID_EX_w),
+	.pc_o	(pc_IF_ID_w),
 	.inst_bus_o(instruction_bus_w)
 );
 
@@ -378,26 +386,30 @@ REG_DECODE_EX
 	.clk(clk),
 	.reset(reset),
 	.enable(1'b1),
-	.pc(pc_PL_w),	
-	.DataInput1(read_data_1_PL_w),	
-	.DataInput2(read_data_2_PL_w),
-	.imm(inmmediate_data_PL_w),
-	.branch(b_e_pl_w),
-	.mem_read(mem_read_PL_w),
-	.mem_write(mem_write_PL_w),
-	.alu_op(alu_operation_PL_w),
-	.pc4(pc_plus_4_PL2_w),
-	.src(alu_src_PL_w),
-	.b_o_jalr(b_jalr_w),
+	.pc(pc_IF_ID_w),	
+	.DataInput1(read_data_1_ID_EX_w),	
+	.DataInput2(read_data_2_ID_EX_w),
+	.imm(inmmediate_data_ID_EX_w),
+	.branch(b_e_ID_EX_w),
+	.mem_read(mem_read_ID_EX_w),
+	.mem_write(mem_write_ID_EX_w),
+	.alu_op(alu_operation_ID_EX_w),
+	.pc4(pc_plus_4_ID_EX_w),
+	.src(alu_src_ID_EX_w),
+	.b_o_jalr(b_jalr_ID_EX_w),
+	.Reg_Write_i(reg_write_w),
+	.write_register_i(instruction_bus_w[11:7]),
 	
+	.write_register_o(write_register_EX_MEM_w),
+	.Reg_Write_o(reg_write_EX_MEM_w),
 	.b_o_jalr_o(b_o_j_w),
 	.src_o(alu_src_w),
-	.pc4_o(pc_plus_4_PL3_w),
+	.pc4_o(pc_plus_4_EX_MEM_w),
 	.alu_op_o(alu_operation_w),
-	.branch_o(branch_E_PL_w),
-	.mem_read_o(mem_read_PL2_w),
-	.mem_write_o(mem_write_PL2_w),
-	.pc_o(pc_PL2_w),
+	.branch_o(branch_E_EX_MEM_w),
+	.mem_read_o(mem_read_EX_MEM_w),
+	.mem_write_o(mem_write_EX_MEM_w),
+	.pc_o(pc_ID_EX_w),
 	.DataOutput1(read_data_1_w),
 	.DataOutput2(read_data_2_w),
 	.imm_o(inmmediate_data_w)
@@ -409,21 +421,24 @@ REG_EX_MEMORY
 	.clk(clk),
 	.reset(reset),
 	.enable(1'b1),
-	.DataInput(alu_result_PL_w),	
+	.DataInput(alu_result_EX_MEM_w),	
 	.DataInput2(read_data_2_w),	
-	.bc(branch_E_PL_w),
+	.bc(branch_E_EX_MEM_w),
 	.zero(zero_w),
-	.mem_read(mem_read_PL2_w),
-	.mem_write(mem_write_PL2_w),
-	.pc4(pc_plus_4_PL3_w),
+	.mem_read(mem_read_EX_MEM_w),
+	.mem_write(mem_write_EX_MEM_w),
+	.pc4(pc_plus_4_EX_MEM_w),
+	.Reg_Write_i(reg_write_EX_MEM_w),
+	.write_register_i(write_register_EX_MEM_w),
 	
-	.pc4_o(pc_plus_4_PL4_w),
-	
-	.bc_o(branch_E_PL2_w),
+	.write_register_o(write_register_MEM_WB_w),
+	.Reg_Write_o(reg_write_MEM_WB_w),
+	.pc4_o(pc_plus_4_MEM_WB_w),
+	.bc_o(branch_E_MEM_WB_w),
 	.mem_read_o(mem_read_w),
 	.mem_write_o(mem_write_w),
 	.DataOutput(alu_result_w),
-	.DataOutput2(read_data_2PLO_w)
+	.DataOutput2(read_data_2_EX_MEM_w)
 
 );
 
@@ -433,12 +448,15 @@ REG_MEMORY_WB
 	.clk(clk),
 	.reset(reset),
 	.enable(1'b1),
-	.DataInput(mem_out_or_result_PL_w),
-	.bc(branch_E_PL2_w),
-	.pc4(pc_plus_4_PL4_w),
+	.DataInput(mem_out_or_result_MEM_WB_w),
+	.bc(branch_E_MEM_WB_w),
+	.pc4(pc_plus_4_MEM_WB_w),
+	.Reg_Write_i(reg_write_MEM_WB_w),
+	.write_register_i(write_register_MEM_WB_w),
 	
+	.write_register_o(write_register_WB_RF_w),
+	.Reg_Write_o(reg_write_WB_RF_w),
 	.pc4_o(pc_plus_4_w),
-	
 	.bc_o(branch_E_w),
 	.DataOutput(mem_out_or_result_w)
 	

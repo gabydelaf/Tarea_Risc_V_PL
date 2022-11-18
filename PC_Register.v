@@ -26,13 +26,12 @@ module PC_Register
 	output reg [N-1:0] PC_Value
 );
 
-always@(negedge reset or posedge clk) begin
+always@(negedge reset or negedge clk) begin
 	if(reset==0)
 		PC_Value <= 32'h00400000; //Iniciar el valor del PC en 0x400000
 	else if (bubble == 0)
 		PC_Value<= Next_PC;
-	else	if(bubble == 1)
-		PC_Value<= PC_Value;
+
 end
 
 endmodule
