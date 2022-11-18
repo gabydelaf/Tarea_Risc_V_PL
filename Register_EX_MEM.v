@@ -21,7 +21,11 @@ module Register_EX_MEM
 	input mem_write,
 	input bc,
 	input  [N-1:0] pc4,
+	input Reg_Write_i,
+	input	 [4:0] write_register_i,
 	
+	output reg [4:0] write_register_o,
+	output reg Reg_Write_o,
 	output reg [N-1:0] pc4_o,
 	
 	output reg bc_o,
@@ -43,6 +47,8 @@ always@(negedge reset or negedge clk) begin
 		mem_write_o<=0;
 		bc_o<=0;
 		pc4_o<=0;
+		Reg_Write_o<=0;
+		write_register_o<=0;
 		end
 	else	
 		if(enable==1)
@@ -55,6 +61,8 @@ always@(negedge reset or negedge clk) begin
 			mem_write_o<=mem_write;
 			bc_o<=bc;
 			pc4_o<=pc4;
+			Reg_Write_o<=Reg_Write_i;
+			write_register_o<=write_register_i;
 		end 
 end
 
